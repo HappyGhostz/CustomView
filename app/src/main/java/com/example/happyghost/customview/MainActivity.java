@@ -3,82 +3,65 @@ package com.example.happyghost.customview;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 
+import com.example.happyghost.customview.recycleherple.RecycleViewAdapter;
+import com.example.happyghost.customview.recycleherple.RecycleViewItemDecoration;
 import com.example.happyghost.customview.widget.RefreshView;
+import com.example.happyghost.customview.widget.RefreshViewLayout;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+import java.util.ArrayList;
+import java.util.List;
 
-    private SeekBar mSeekBar;
-    private Button mBtMost;
-    private Button mBtarc;
-    private Button mBtSuccess;
-    private Button mBtErroe;
-    private RefreshView mRv;
+public class MainActivity extends AppCompatActivity  {
+    private RecyclerView mRv;
+    private List<Integer> mList;
+    private ArrayList<Integer> mAddList;
+    private ArrayList<Integer> mAddFooterList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
-        initData();
     }
 
     private void initView() {
-        mRv = (RefreshView) findViewById(R.id.rv);
-        mSeekBar = (SeekBar) findViewById(R.id.seekBar);
-        mBtMost = (Button) findViewById(R.id.button);
-        mBtarc = (Button) findViewById(R.id.button2);
-        mBtSuccess = (Button) findViewById(R.id.button3);
-        mBtErroe = (Button) findViewById(R.id.button4);
-
-        mBtMost.setOnClickListener(this);
-        mBtarc.setOnClickListener(this);
-        mBtSuccess.setOnClickListener(this);
-        mBtErroe.setOnClickListener(this);
-    }
-
-    private void initData() {
-        mSeekBar.setMax(360);
-        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        mList = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            mList.add(i);
+        }
+        mRv = (RecyclerView) findViewById(R.id.rv);
+        RefreshViewLayout rl = (RefreshViewLayout) findViewById(R.id.rl);
+        final RecycleViewAdapter<Integer> adapter = new RecycleViewAdapter<>(this, mList);
+        mRv.setLayoutManager(new LinearLayoutManager(this));
+        mRv.addItemDecoration(new RecycleViewItemDecoration());
+        mRv.setAdapter(adapter);
+        rl.setOnPullRefreshListener(new RefreshViewLayout.OnPullRefreshListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mRv.startSweepAngleAnimation(progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
+            public void onRefresh() {
+                mAddList = new ArrayList<>();
+                for (int i = 200; i < 210; i++) {
+                    mAddList.add(i);
+                }
+                mList.addAll(0,mAddList);
+                adapter.notifyDataSetChanged();
             }
         });
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.button:
-                mRv.setCurrrentState(1);
-                break;
-            case R.id.button2:
-                mRv.setCurrrentState(2);
-                mRv.startArcAnimation();
-                break;
-            case R.id.button3:
-                mRv.setCurrrentState(3);
-                mRv.setCurrentLoadState(4);
-                break;
-            case R.id.button4:
-                mRv.setCurrrentState(3);
-                mRv.setCurrentLoadState(5);
-                break;
-
-        }
+        rl.setOnPushLoadMoreListener(new RefreshViewLayout.OnPushLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                mAddFooterList = new ArrayList<>();
+                for (int i = 3000; i < 3010; i++) {
+                    mAddFooterList.add(i);
+                }
+                mList.addAll(mList.size(),mAddFooterList);
+                adapter.notifyDataSetChanged();
+            }
+        });
     }
 }

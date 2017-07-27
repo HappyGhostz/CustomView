@@ -12,6 +12,7 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.Animation;
 
 import com.example.happyghost.customview.R;
 
@@ -48,6 +49,8 @@ public class RefreshView extends View{
     private Drawable mError;
     private ObjectAnimator mArcAnimator;
     private ValueAnimator alphAnimation;
+    private Animation.AnimationListener mListener;
+    private float mStartAngle;
 
     public RefreshView(Context context) {
         this(context,null);
@@ -69,7 +72,8 @@ public class RefreshView extends View{
 
         mArcPaint = new Paint();
         mArcPaint.setAntiAlias(true);
-        mArcPaint.setColor(Color.WHITE);
+        mArcPaint.setColor(Color.RED);
+        mArcPaint.setStrokeWidth(3);
         mArcPaint.setStyle(Paint.Style.STROKE);
 
         mSuccess = context.getResources().getDrawable(R.mipmap.yes);
@@ -102,8 +106,8 @@ public class RefreshView extends View{
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        mWidth = w;
-        mHeight = h;
+        mWidth = getMeasuredWidth();
+        mHeight = getMeasuredHeight();
         mRadius = Math.min(mWidth,mHeight)/2;
 
     }
@@ -123,18 +127,19 @@ public class RefreshView extends View{
     private void drawCricle(Canvas canvas) {
         RectF rectF = new RectF();
         rectF.set(mWidth/2-mRadius,mHeight/2-mRadius,mWidth/2+mRadius,mHeight/2+mRadius );
-        canvas.drawArc(rectF,-90,mSweepAngle,true,mCriclePaint);
+        canvas.drawArc(rectF,mStartAngle,mSweepAngle,true,mCriclePaint);
     }
 
     private void drawMostArc(Canvas canvas) {
         RectF progressRect = new RectF();
-        progressRect.set(mWidth*3/4-mRadius,mHeight*3/4-mRadius,mWidth/4+mRadius,mHeight/4+mRadius);
+//        mWidth*3/4-mRadius,mHeight*3/4-mRadius,mWidth/4+mRadius,mHeight/4+mRadius
+        progressRect.set(mWidth/2-mRadius/2,mHeight/2-mRadius/2,mWidth/2+mRadius/2,mHeight/2+mRadius/2);
         canvas.drawArc(progressRect,0,270, false,mArcPaint);
     }
 
     private void drawArc(Canvas canvas) {
         RectF progressRect = new RectF();
-        progressRect.set(mWidth*3/4-mRadius,mHeight*3/4-mRadius,mWidth/4+mRadius,mHeight/4+mRadius);
+        progressRect.set(mWidth/2-mRadius/2,mHeight/2-mRadius/2,mWidth/2+mRadius/2,mHeight/2+mRadius/2);
         if ( mArcSweep != 360 ) {
         mProgressStartAngel = progressReverse ? 270 : (int) (270 + mArcSweep);
             canvas.drawArc(progressRect
@@ -153,8 +158,9 @@ public class RefreshView extends View{
         }
     }
 
-    public void startSweepAngleAnimation(float sweepAngle){
-        mSweepAngle=sweepAngle;
+    public void startSweepAngleAnimation(float startAngle,float sweepAngle){
+        this.mStartAngle = startAngle;
+        this.mSweepAngle=sweepAngle;
         float alpha = sweepAngle / 360;
         this.setAlpha(alpha);
         setCurrrentState(0);
@@ -171,7 +177,7 @@ public class RefreshView extends View{
 
     public void startArcAnimation(){
         if(mArcAnimator==null){
-            mArcAnimator = ObjectAnimator.ofFloat(this,"mArcSweep",0,360);
+            mArcAnimator = ObjectAnimator.ofFloat(this,"mArcSweep",0,359);
         }
         mArcAnimator.setDuration(1000);
         mArcAnimator.setRepeatMode(ValueAnimator.RESTART);
@@ -207,5 +213,24 @@ public class RefreshView extends View{
     public void setMArcSweep(float arcSweep){
         this.mArcSweep=arcSweep;
         invalidate();
+    }
+    public void setAnimationListener(Animation.AnimationListener listener) {
+        mListener = listener;
+    }
+
+    @Override
+    public void onAnimationStart() {
+        super.onAnimationStart();
+        if (mListener != null) {
+            mListener.onAnimationStart(getAnimation());
+        }
+    }
+
+    @Override
+    public void onAnimationEnd() {
+        super.onAnimationEnd();
+        if (mListener != null) {
+            mListener.onAnimationEnd(getAnimation());
+        }
     }
 }
